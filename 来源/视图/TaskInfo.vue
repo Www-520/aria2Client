@@ -8,7 +8,7 @@
     </div>
 
 <!-- 总览 -->
-    <div v-if="tasks && $route.params.gid" :class="{ active: flag1 }">
+    <div v-if="tasks && $route.params.gid" :class="{ active: flag }">
       <div class="info-box" >
         <span class="info-name">任务总览</span>
         <span class="info-content">
@@ -60,7 +60,7 @@
     </div>
 
 <!-- 区块信息 -->
-    <BlockInfo v-if="tasks && $route.params.gid" :class="{ active: flag2 }"></BlockInfo>
+    <BlockInfo v-if="tasks && $route.params.gid" :class="{ active: !flag }"></BlockInfo>
 
   </div>
 </template>
@@ -135,20 +135,25 @@ export default {
   data(){
     return{
       tasks: null,
-      flag1: false,
-      flag2: true
+      flag: false,
     }
   },
   components: {
     BlockInfo
   },
-  async mounted() {
+  mounted() {
+    // 不要用setInterval setInterval实际不是每秒执行一次
+    // 要用setTimeout实现
+    /*
     this.intervalId = setInterval(async () => {
       this.tasks = await this.aria2.tellStatus(this.$route.params.gid)
     }, 1000)
+    */
+    this.interval();
   },
   beforeDestroy() {
-    clearInterval(this.intervalId)
+    // clearInterval(this.intervalId)
+    clearTimeout(this.intervalId);
   },
   methods: {
     getFiles(it){
@@ -156,14 +161,13 @@ export default {
       return it.files[0].path.split('/').at(-1)
     },
     changeIdx(str){
-      if(str == 1){
-        this.flag1 = false
-        this.flag2 = true
-      } else {
-        this.flag1 = true
-        this.flag2 = false
-      }
-      
+      this.flag = str === 1;
+    },
+    interval() {
+      this.intervalId = setTimeout(async () => {
+        this.taks = await this.aria2.tellStatus(this.$route.params.gid);
+        this.interval();
+      }, 1000);
     }
   }
 }
